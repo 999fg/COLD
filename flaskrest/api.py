@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
 from subprocess import PIPE, run
 import os
+import json
 
 app = Flask(__name__)
 api = Api(app)
@@ -25,12 +26,12 @@ def kommand():
 		return jsonify(data)
 
 @app.route('/upload', methods = ['POST'])
-def kommand():
+def upload():
 	if request.method == "POST":
-		json_dict = request.get_json()
-		file_info = json.loads(json_dict)
+		file_info = request.get_json()
 		print (file_info['file_info'])
 		data = {'message': 'success'}
+		return jsonify(data)
 
 
 def kommand_parser(kommand_input):

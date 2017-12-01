@@ -10,7 +10,7 @@ api = Api(app)
 if __name__=='__main__':
 	app.run(host='0.0.0.0')
 '''
-url = 'http://172.17.0.2:5000/' #IP address of other machine
+url = 'http://127.0.0.1:5000/' #IP address of other machine
 while(True):
 	print ('Client -> Control Plane, /upload (POST) : 1')
 	rest_choice = input()
