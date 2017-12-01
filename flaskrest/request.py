@@ -10,11 +10,11 @@ api = Api(app)
 if __name__=='__main__':
 	app.run(host='0.0.0.0')
 '''
-url = 'http://127.0.0.1:5000/' #IP address of other machine
+url = 'http://172.17.0.3:5000/' #IP address of other machine
 while(True):
 	print ('Client -> Control Plane, /upload (POST) : 1')
 	rest_choice = input()
-	if rest_choice == 1:
+	if int(rest_choice) == 1:
 		url = url + 'upload'
 		file_info = '{"file_info": ["file", "file_piece1", "file_piece2"]}'
 		headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
