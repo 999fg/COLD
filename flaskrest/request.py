@@ -1,5 +1,5 @@
 import requests
-import simplejson as json
+import json
 '''
 from flask import Flask
 from flask_restful import Resource, Api
@@ -10,11 +10,15 @@ api = Api(app)
 if __name__=='__main__':
 	app.run(host='0.0.0.0')
 '''
-url = 'http://172.17.0.2:5000/kommand' #IP address of other machine
+url = 'http://172.17.0.2:5000/' #IP address of other machine
 while(True):
-	kommand_input = input("Input Kommand:")
-	data = {'kommand_input': kommand_input}
-	headers = {'Content-type': 'application/json', 'Accept': 'text/plain'} 
-	response = requests.post(url, data=json.dumps(data), headers = headers)
-	json_dict = response.json()
-	print (json_dict.get('kommand_output'))
+	print ('Client -> Control Plane, /upload (POST) : 1')
+	rest_choice = input()
+	if rest_choice == 1:
+		url = url + 'upload'
+		file_info = '{"file_info": ["file", "file_piece1", "file_piece2"]}'
+		headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+		response = requests.post(url, data=file_info, headers = headers)
+		json_dict = response.json()
+		print (json_dict.get('message'))
+	

@@ -24,6 +24,15 @@ def kommand():
 		data = {'kommand_output': kommand_output}
 		return jsonify(data)
 
+@app.route('/upload', methods = ['POST'])
+def kommand():
+	if request.method == "POST":
+		json_dict = request.get_json()
+		file_info = json.loads(json_dict)
+		print (file_info['file_info'])
+		data = {'message': 'success'}
+
+
 def kommand_parser(kommand_input):
 	return kommand_input.split()
 
