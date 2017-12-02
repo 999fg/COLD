@@ -16,9 +16,9 @@ while(True):
 	rest_choice = input()
 	if int(rest_choice) == 1:
 		url = url + 'upload'
-		file_info = '{"file_name", "file_block_name": ["file_piece1", "file_piece2"], "file_size": 10000000, "block_size": [500000, 500000]}'
+		file_info = '{"file_name": "file.txt", "file_block_name": ["file_piece1", "file_piece2"], "file_size": 10000000, "block_size": [500000, 500000]}'
 		headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-		response = requests.post(url, data=file_info, headers = headers)
+		response = requests.post(url, data=json.dumps(file_info), headers = headers)
 		json_dict = response.json()
 		print (json_dict.get('message'))
 	
