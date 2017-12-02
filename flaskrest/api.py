@@ -11,7 +11,7 @@ conn = pymysql.connect(host='localhost', user='root', password='root', db='CS408
 
 @app.route('/')
 def hello():
-	return 'Hello World!'
+    return 'Hello World!'
 
 #@app.route('/kommand', methods = ['POST'])
 #def kommand():
@@ -29,20 +29,26 @@ def hello():
 
 @app.route('/upload', methods = ['POST'])
 def upload():
-	if request.method == "POST":
-		file_info = request.get_json()
-		print (file_info['file_info'])
-                print (file_info['file_name'])
-                print (file_info['file_size'])
-                print (file_info['block_size'])
-		data = {'message': 'success'}
-		return jsonify(data)
+    if request.method == "POST":
+        file_info = json.loads(request.get_json())
+        print (file_info)
+        print (int(file_info['file_size']))
+        print (int(file_info['block_size'][0]))
+        conn = pymysql.connect(host='localhost', user='root', password='root', db='CS408', charset='utf8')
+        curs = conn.cursor()
+        sql = """insert into file(file_name, file_block_name, file_block_index, saved_device_address, file_size, block_size) values (%s, %s, %s, %s, %s, %s)"""
+        curs.execute(sql, (file_info['file_name'], file_info['file_block_name'][0], 0, '127.0.0.1', int(file_info['file_size']), int(file_info['block_size'][0])))
+        #curs.execute(sql, ('a', 'aa', int(0), '127.0.0.1', int(0), int(0)))
+        conn.commit()
+        conn.close()
+        data = {'message': 'success'}
+        return jsonify(data)
 
 
 def kommand_parser(kommand_input):
-	return kommand_input.split()
+    return kommand_input.split()
 
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0')
 
