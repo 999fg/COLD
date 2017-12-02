@@ -2,9 +2,12 @@ from flask import Flask, request, jsonify
 from flask_restful import Resource, Api
 import os
 import json
+import pymysql
 
 app = Flask(__name__)
 api = Api(app)
+
+conn = pymysql.connect(host='localhost', user='root', password='root', db='CS408', charset='utf8')
 
 @app.route('/')
 def hello():
@@ -29,6 +32,9 @@ def upload():
 	if request.method == "POST":
 		file_info = request.get_json()
 		print (file_info['file_info'])
+                print (file_info['file_name'])
+                print (file_info['file_size'])
+                print (file_info['block_size'])
 		data = {'message': 'success'}
 		return jsonify(data)
 
