@@ -3,11 +3,13 @@ from flask_restful import Resource, Api
 import os
 import json
 import pymysql
+import requests
 
 app = Flask(__name__)
 api = Api(app)
 
-devices = ['172.17.0.3', '172.17.0.4']
+devices = ['143.248.226.19', '143.248.229.39']
+#devices = ['127.0.0.1', '127.0.0.1']
 
 @app.route('/')
 def hello():
@@ -30,23 +32,62 @@ def hello():
 @app.route('/upload', methods = ['POST'])
 def upload():
     if request.method == "POST":
+        print (3)
+        print (request)
+        print (request.get_json())
         file_info = json.loads(request.get_json())
         conn = pymysql.connect(host='localhost', user='root', password='root', db='CS408', charset='utf8')
         curs = conn.cursor()
         sql = """insert into file(file_name, file_block_name, file_block_index, saved_device_address, file_size, block_size) values (%s, %s, %s, %s, %s, %s)"""
         for i in range(len(file_info['file_block_name'])):
-            #TODO: scp files to other devices    
-            curs.execute(sql, (file_info['file_name'], file_info['file_block_name'][i], i, '127.0.0.1', int(file_info['file_size']), int(file_info['block_size'][i])))
+            for j in range(len(devices)):
+                os.system("sshpass -p 'changeme' scp ~/disk_cold/"+file_info['file_block_name'][i]+" android@"+devices[j]+":~/disk_cold/.")
+                curs.execute(sql, (file_info['file_name'], file_info['file_block_name'][i], i, devices[j], int(file_info['file_size']), int(file_info['block_size'][i])))
+                print (i, j)
         #curs.execute(sql, ('a', 'aa', int(0), '127.0.0.1', int(0), int(0)))
         conn.commit()
         conn.close()
+        print ('commit and close')
         data = {'message': 'success'}
         return jsonify(data)
 
-
-def kommand_parser(kommand_input):
-    return kommand_input.split()
-
+@app.route('/download', methods = ['POST']) # JSON { 'file_name': string } 
+def download():
+    if request.method == "POST":
+        file_info = json.loads(request.get_json())
+        conn = pymysql.connect(host='localhost', user='root', password='root', db='CS408', charset='utf8')
+        curs = conn.cursor()
+        sql = "select file_block_name, file_block_index, saved_device_address from file where file_name = '"+file_info['file_name']+"'"
+        curs.execute(sql)
+        rows = curs.fetchall()
+        print (rows)
+        print (rows[0][0].strip(), rows[1][0].strip(), str(rows[0][1]), str(rows[1][1]))
+        alive_devices = []
+        for i in range(len(devices)):
+            response = os.system("ping -c 1 " + devices[i])
+            if response == 0:
+                alive_devices.append(devices[i])
+        unused_indexes = [0,1]
+        if len(alive_devices) == 2:
+            for i in range(len(rows)):
+                if rows[i][1] in unused_indexes and rows[i][2].strip() in alive_devices:
+                    file_info2 = '{"file_block_name": "'+rows[i][0].strip()+'", "file_block_index": '+str(rows[i][1])+', "client_address": "'+file_info['client_address']+'"}'
+                    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+                    url = 'http://'+rows[i][2].strip()+':5000'
+                    response2 = requests.post(url, data=json.dumps(file_info), headers = headers)
+                    unused_indexes.remove(rows[i][1])
+                    alive_devices.remove(rows[i][2].strip())
+        elif len(alive_devices) == 1:
+            for i in range(len(rows)):
+                if rows[i][1] in unused_indexes and rows[i][2].strip() in alive_devices:
+                    file_info2 = '{"file_block_name": "'+rows[i][0].strip()+'", "file_block_index": '+str(rows[i][1])+', "client_address": "'+file_info['client_address']+'"}'
+                    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+                    url = 'http://'+rows[i][2].strip()+':5000'
+                    response2 = requests.post(url, data=json.dumps(file_info), headers = headers)
+                    unused_indexes.remove(rows[i][1])
+        conn.close()
+        data = {'message': 'success'}
+        return jsonify(data)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
