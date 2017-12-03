@@ -77,7 +77,6 @@ def download():
                 if rows[i][1] in unused_indexes and rows[i][2].strip() in alive_devices:
                     file_info2 = '{"file_block_name": "'+rows[i][0].strip()+'", "file_block_index": '+str(rows[i][1])+', "client_address": "'+file_info['client_address']+'", "client_id": "'+file_info['client_id']+'", "client_pw": "'+file_info['client_pw']+'"}'
                     datas.append(file_info2)
-                    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
                     url = 'http://'+rows[i][2].strip()+':5000/download_relay'
                     urls.append(url)
                     #response2 = requests.post(url, data=json.dumps(file_info2), headers = headers)
@@ -88,12 +87,12 @@ def download():
                 if rows[i][1] in unused_indexes and rows[i][2].strip() in alive_devices:
                     file_info2 = '{"file_block_name": "'+rows[i][0].strip()+'", "file_block_index": '+str(rows[i][1])+', "client_address": "'+file_info['client_address']+'", "client_id": "'+file_info['client_id']+'", "client_pw": "'+file_info['client_pw']+'"}'
                     datas.append(file_info2)
-                    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
                     url = 'http://'+rows[i][2].strip()+':5000/download_relay'
                     urls.append(url)
                     #response2 = requests.post(url, data=json.dumps(file_info2), headers = headers)
                     unused_indexes.remove(rows[i][1])
-        rs = (grequests.post(urls[k], data = datas[k]) for k in range(len(urls)))
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        rs = (grequests.post(urls[k], data = json.dumps(datas[k]), headers = headers) for k in range(len(urls)))
         print (grequests.map(rs))
         conn.close()
         data = {'message': 'success'}
@@ -103,8 +102,8 @@ def download():
 def download_relay():
     if request.method == "POST":
         file_info = json.loads(request.get_json())
-        print ("HOLY COW")
-        #subprocess.call(["sshpass -p "+file_info['client_pw']+" scp -o StrictHostKeyChecking=no ~/disk_cold/"+file_info['file_block_name']+" "+file_info['client_id']+"@"+file_info['client_address']+":~/."], shell=True)
+        print (file_info)
+        subprocess.call(["sshpass -p "+file_info['client_pw']+" scp -o StrictHostKeyChecking=no ~/disk_cold/"+file_info['file_block_name']+" "+file_info['client_id']+"@"+file_info['client_address']+":~/."], shell=True)
         #curs.execute(sql, ('a', 'aa', int(0), '127.0.0.1', int(0), int(0)))
         data = {'message': 'success'}
         return jsonify(data)
