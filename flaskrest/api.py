@@ -43,7 +43,7 @@ def upload():
         sql = """insert into file(file_name, file_block_name, file_block_index, saved_device_address, file_size, block_size) values (%s, %s, %s, %s, %s, %s)"""
         for i in range(len(file_info['file_block_name'])):
             for j in range(len(devices)):
-                os.system("sshpass -p 'changeme' scp ~/disk_cold/"+file_info['file_block_name'][i]+" android@"+devices[j]+":~/disk_cold/.")
+                subprocess.call(["sshpass -pchangeme scp -o StrictHostKeyChecking=no ~/disk_cold/"+file_info['file_block_name'][i]+" android@"+devices[j]+":~/disk_cold/."], shell=True)
                 curs.execute(sql, (file_info['file_name'], file_info['file_block_name'][i], i, devices[j], int(file_info['file_size']), int(file_info['block_size'][i])))
                 print (i, j)
         #curs.execute(sql, ('a', 'aa', int(0), '127.0.0.1', int(0), int(0)))
@@ -93,9 +93,15 @@ def download():
                     unused_indexes.remove(rows[i][1])
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         rs = (grequests.post(urls[k], data = json.dumps(datas[k]), headers = headers) for k in range(len(urls)))
-        print (grequests.map(rs))
+        success_count = 0
+        for response in grequests.map(rs):
+            if 'success' in str(response.content):
+                success_count = success_count + 1
         conn.close()
-        data = {'message': 'success'}
+        if success_count == 2:
+            data = {'file_name': file_info['file_name'], 'message': 'success'}
+        else:
+            data = {'message': 'fail'}
         return jsonify(data)
 
 @app.route('/download_relay', methods = ['POST'])
@@ -103,7 +109,7 @@ def download_relay():
     if request.method == "POST":
         file_info = json.loads(request.get_json())
         print (file_info)
-        subprocess.call(["sshpass -p "+file_info['client_pw']+" scp -o StrictHostKeyChecking=no ~/disk_cold/"+file_info['file_block_name']+" "+file_info['client_id']+"@"+file_info['client_address']+":~/."], shell=True)
+        subprocess.call(["sshpass -p"+file_info['client_pw']+" scp -o StrictHostKeyChecking=no ~/disk_cold/"+file_info['file_block_name']+" "+file_info['client_id']+"@"+file_info['client_address']+":~/."], shell=True)
         #curs.execute(sql, ('a', 'aa', int(0), '127.0.0.1', int(0), int(0)))
         data = {'message': 'success'}
         return jsonify(data)
